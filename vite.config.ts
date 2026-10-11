@@ -4,7 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   // Cloudflare Pages: serve from repository root as the site root.
-  // Explicit root base '/' keeps asset URLs correct on 7soumyajit.is-a.dev.
+  // Explicit root base '/' keeps asset URLs correct on 7soumyajitghosh.is-a.dev.
   base: "/",
   build: {
     // Cloudflare Pages build output directory (matches Pages dashboard setting).

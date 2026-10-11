@@ -81,63 +81,69 @@ public/
 5. Update `src/data/journey.ts` and `src/data/skills.ts` — entries marked `editable` are placeholders. Replace them with real milestones.
 6. Optional: add `public/images/og-cover.jpg` (1200×630) for link previews. `index.html` already references it.
 
-## Cloudflare Pages deployment
+## Vercel deployment
 
-Hosting target: **Cloudflare Pages**, free-first, static output in `dist/`.
-No `wrangler.toml` is used — Pages Git integration builds and serves `dist/` directly.
-No `_redirects` SPA rewrite is included — this is a single page using hash anchors
-(no client-side router), so it is not needed. The custom 404 stays as `public/404.html`.
+Hosting target: **Vercel**, free-first, static Vite output in `dist/`.
+No `vercel.json` is used — Vercel auto-detects Vite; Git integration builds and
+serves `dist/` directly. No SPA rewrite is included — this is a single page
+using hash anchors (no client-side router), so it is not needed. The custom 404
+stays as `public/404.html`.
 
-Target custom domain: `7soumyajit.is-a.dev` (free `is-a.dev` subdomain).
+Target custom domain: `7soumyajitghosh.is-a.dev` (free `is-a.dev` subdomain).
 
 1. Push this repo to GitHub (production branch `main`).
-2. Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git.
-3. Select the repository, production branch `main`.
-4. Build settings:
-   - Framework preset: **Vite** (or None)
+2. Vercel dashboard → Add New → Project → Import this repository.
+3. Build settings:
+   - Framework preset: **Vite**
    - Build command: `npm run build`
-   - Build output directory: `dist`
+   - Output directory: `dist`
    - Root directory: `/` (repo root)
-5. Node version: set the `NODE_VERSION` environment variable in the Pages project
-   settings to the LTS you verified locally (this repo requires Node 18+;
-   verified here on Node v24). This avoids surprises when Pages defaults change.
-6. Environment variables: none else required. Do not put secrets in frontend
+4. Node version: this repo requires Node 18+ (verified here on Node v24).
+5. Environment variables: none required. Do not put secrets in frontend
    code — public Vite vars (`VITE_*`) are visible to anyone.
-7. Deploy, then test the assigned `*.pages.dev` URL on mobile + desktop.
-8. Custom 404 is served from `public/404.html` (copied to `dist/404.html` on build).
-9. `vite.config.ts` explicitly sets `base: "/"` and `build.outDir: "dist"` so asset
+6. Deploy, then test the assigned `*.vercel.app` URL on mobile + desktop.
+7. `vite.config.ts` explicitly sets `base: "/"` and `build.outDir: "dist"` so asset
    URLs are correct when served from the site root on the custom domain.
-10. `pnpm-lock.yaml` is committed for local reproducible installs, but Pages
-    uses `npm run build` and runs `npm install`, which ignores pnpm files. If
-    you want locked npm installs on Pages, run
-    `npm install --package-lock-only`, commit the generated
-    `package-lock.json`, and redeploy. `pnpm-workspace.yaml` exists only to
-    allow the `esbuild` postinstall under a local pnpm wrapper; it is ignored
-    by Pages/npm builds.
+8. `pnpm-lock.yaml` is committed for local reproducible installs, but Vercel
+   uses `npm run build` and runs `npm install`, which ignores pnpm files. If
+   you want locked npm installs on Vercel, run
+   `npm install --package-lock-only`, commit the generated
+   `package-lock.json`, and redeploy. `pnpm-workspace.yaml` exists only to
+   allow the `esbuild` postinstall under a local pnpm wrapper; it is ignored
+   by Vercel/npm builds.
 
-### Custom domain: `7soumyajit.is-a.dev`
+### Custom domain: `7soumyajitghosh.is-a.dev`
 
-Two separate steps, both manual (nothing in this repo does them for you):
+Two separate steps, both manual (nothing in this repo does them for you).
+Status note (Oct 2026): the `is-a-dev/register` repo banner says
+**pull requests are disabled until further notice**, so a new registration PR
+cannot be merged right now. Prepare everything, deploy first, then submit when
+they reopen.
 
-A. **Claim the subdomain with the is-a.dev project.** `is-a.dev` subdomains are
-   granted through that project's own documented registration process (see the
-   official is-a.dev docs/repo for the current steps and required record
-   format). Follow their process to request `7soumyajit`. This repo contains no
-   registration file and makes no claim that the name is registered or reserved.
+A. **Add the domain in Vercel first.** Project → Settings → Domains → Add
+   `7soumyajitghosh.is-a.dev`. Disable any "redirect to www" option. Use
+   "Continue manually" and copy the TXT verification value Vercel shows you —
+   you need it for the registration files. Use only the DNS values your own
+   Vercel dashboard displays; do not copy record values from anywhere else.
 
-B. **Connect it in Cloudflare Pages.** Pages project → Custom domains → Set up a
-   custom domain → enter `7soumyajit.is-a.dev`, then follow exactly the DNS /
-   verification instructions the Pages dashboard shows you. Do not copy DNS
-   values from anywhere else — use only what the dashboard displays for your
-   project. HTTPS is provisioned by Cloudflare once verification passes.
+B. **Claim the subdomain with the is-a.dev project** (when PRs reopen).
+   Fork `is-a-dev/register` and add two files under `/domains`, following the
+   official Vercel guide (`docs.is-a.dev/guides/vercel/`):
+   - `domains/7soumyajitghosh.json` — owner block plus the A record(s) exactly
+     as your Vercel dashboard shows them.
+   - `domains/_vercel.7soumyajitghosh.json` — owner block plus the TXT
+     verification string from step A.
+   Then open the PR from your fork and watch it for requested changes. This
+   repo contains no registration file and makes no claim that the name is
+   registered or reserved.
 
 ### Remaining manual steps for you (not done by this change)
 
-- [ ] Push to GitHub and connect the repo to Cloudflare Pages (steps 1–7 above).
-- [ ] Set `NODE_VERSION` in Pages settings; confirm the first deploy succeeds.
-- [ ] Request `7soumyajit` via the is-a.dev project's documented process.
-- [ ] Add `7soumyajit.is-a.dev` as a Pages custom domain; complete the DNS /
-      verification steps the dashboard shows; confirm HTTPS loads.
+- [ ] Import the repo in Vercel and confirm the first deploy succeeds.
+- [ ] In Vercel → Domains, add `7soumyajitghosh.is-a.dev`; copy the TXT value.
+- [ ] When is-a.dev PRs reopen, submit `7soumyajitghosh` + `_vercel.7soumyajitghosh`
+      files per their Vercel guide; wait for merge.
+- [ ] Confirm `https://7soumyajitghosh.is-a.dev` loads with HTTPS.
 - [ ] Add `public/images/profile.jpg` and `public/images/og-cover.jpg` (see
       "Personalize before publishing") — both 404 until you add them.
 
