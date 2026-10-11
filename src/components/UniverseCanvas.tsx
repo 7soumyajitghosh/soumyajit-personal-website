@@ -34,70 +34,16 @@ export default function UniverseCanvas() {
     let raf = 0;
     let running = true;
 
-    const readVar = (name: string, fallback: string) => {
-      const shell = document.querySelector(".site-shell");
-      const v = shell
-        ? getComputedStyle(shell).getPropertyValue(name).trim()
-        : "";
-      return v || fallback;
-    };
-
-    // Accent-aware colors — refreshed whenever data-accent / theme changes.
-    let TINTS = [
+    // Fixed palette — no runtime accent switching.
+    const TINTS = [
       "rgba(226,232,255,0.65)",
       "rgba(226,232,255,0.45)",
-      "rgba(139,146,255,0.7)",
-      "rgba(103,209,255,0.75)",
-      "rgba(167,139,250,0.65)",
+      "rgba(255,122,26,0.7)",
+      "rgba(255,176,32,0.75)",
+      "rgba(255,196,107,0.65)",
     ];
-    let glowStops = ["rgba(99,102,241,0.13)", "rgba(59,130,246,0.06)", "rgba(34,211,238,0.03)"];
-    let pointerGlow = "103,209,255";
-    const hexToRgb = (hex: string) => {
-      const h = hex.replace("#", "");
-      if (h.length === 3)
-        return h.split("").map((c) => parseInt(c + c, 16));
-      if (h.length === 6)
-        return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
-      return null;
-    };
-    const withAlpha = (color: string, alpha: number) => {
-      const rgb = hexToRgb(color);
-      if (rgb) return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha})`;
-      const m = color.match(/(\d+),\s*(\d+),\s*(\d+)/);
-      if (m) return `rgba(${m[1]},${m[2]},${m[3]},${alpha})`;
-      return color;
-    };
-    const refreshColors = () => {
-      const cyan = readVar("--cyan", "#67d1ff");
-      const violet = readVar("--violet", "#a78bfa");
-      const blue = readVar("--blue", "#4f7cff");
-      TINTS = [
-        "rgba(226,232,255,0.65)",
-        "rgba(226,232,255,0.45)",
-        withAlpha(blue, 0.7),
-        withAlpha(cyan, 0.75),
-        withAlpha(violet, 0.65),
-      ];
-      for (let i = 0; i < stars.length; i++) {
-        stars[i].tint = TINTS[i % TINTS.length];
-      }
-      glowStops = [withAlpha(blue, 0.13), withAlpha(blue, 0.06), withAlpha(cyan, 0.03)];
-      const rgb = hexToRgb(cyan);
-      pointerGlow = rgb ? `${rgb[0]},${rgb[1]},${rgb[2]}` : "103,209,255";
-    };
-    refreshColors();
-
-    const shellEl = document.querySelector(".site-shell");
-    const accentObserver = shellEl
-      ? new MutationObserver(() => {
-          refreshColors();
-          drawStatic();
-        })
-      : null;
-    accentObserver?.observe(shellEl as Node, {
-      attributes: true,
-      attributeFilter: ["data-accent", "class"],
-    });
+    const glowStops = ["rgba(255,122,26,0.13)", "rgba(255,122,26,0.06)", "rgba(255,176,32,0.03)"];
+    const pointerGlow = "255,176,32";
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
@@ -294,7 +240,6 @@ export default function UniverseCanvas() {
       running = false;
       window.cancelAnimationFrame(raf);
       observer.disconnect();
-      accentObserver?.disconnect();
       canvas.removeEventListener("pointermove", onPointerMove);
       canvas.removeEventListener("pointerleave", onPointerLeave);
       window.removeEventListener("resize", resize);

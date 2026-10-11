@@ -26,7 +26,15 @@ export class CodingStyleMemory {
     if (/_id\b|snake_case/.test(bodies)) naming.push("snake_case present (likely DB/API fields)");
 
     const folders = [...new Set(files.map((f) => f.path.split("/").slice(0, -1).join("/") || "."))];
-    const sizes = files.flatMap((f) => f.symbols.map(() => 20));
+    const sizes = files.flatMap((f) =>
+      f.symbols.map((s) => Math.max(1, (s.endLine ?? s.line) - s.line + 1)),
+    );
+    const functionSize = sizes.length
+      ? {
+          avg: Math.round(sizes.reduce((sum, n) => sum + n, 0) / sizes.length),
+          max: Math.max(...sizes),
+        }
+      : { avg: 0, max: 0 };
     const errorHandling: string[] = [];
     if (/try\s*\{/.test(bodies)) errorHandling.push("try/catch used");
     if (/\.catch\(/.test(bodies)) errorHandling.push("promise .catch used");
@@ -52,7 +60,7 @@ export class CodingStyleMemory {
     return {
       naming: naming.length ? naming : ["no strong signal — default to surrounding file's convention"],
       folderStructure: folders.slice(0, 12),
-      functionSize: { avg: sizes.length ? 20 : 0, max: 80 },
+      functionSize,
       errorHandling: errorHandling.length ? errorHandling : ["no consistent pattern detected — use try/catch + typed errors"],
       comments: /\/\*\*|\/\/\s+[A-Z]/.test(bodies) ? "JSDoc/TSDoc + inline comments present" : "sparse comments — add brief why-comments only",
       typing: /\bany\b/.test(bodies) ? "mixed strictness (`any` present — prefer strong types in new code)" : "strong typing preferred (generics, interfaces)",

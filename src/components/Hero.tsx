@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-import { ArrowDown, Code2, Orbit } from "lucide-react";
 import UniverseCanvas from "./UniverseCanvas";
 import { site } from "../data/site";
 import { useReducedMotion } from "../hooks/useReducedMotion";
@@ -25,12 +24,11 @@ function ProfilePhoto() {
     <div
       className="profile-photo-fallback"
       role="img"
-      aria-label={`Placeholder portrait for ${site.name} — add your photo at public/images/profile.jpg`}
+      aria-label={`Portrait of ${site.name}`}
     >
       <span className="profile-photo-initials" aria-hidden="true">
         SG
       </span>
-      <span className="profile-photo-note">ADD PHOTO AT /images/profile.jpg</span>
     </div>
   );
 }
@@ -72,19 +70,13 @@ export default function Hero() {
             experiment at a time.
           </p>
           <div className="hero-actions">
-            <a className="button button-primary" href="#experiments">
-              Explore My Universe
-            </a>
-            <a className="button button-quiet" href="#projects">
+            <a className="button button-primary" href="#projects">
               View My Projects
             </a>
+            <a className="button button-quiet" href="#contact">
+              Get in Touch
+            </a>
           </div>
-          <p className="hero-footnote">
-            <span className="footnote-star" aria-hidden="true">
-              ✳
-            </span>{" "}
-            Curious by nature. Building one idea at a time.
-          </p>
         </motion.div>
 
         <motion.div
@@ -93,10 +85,6 @@ export default function Hero() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.9, delay: 0.15, ease: "easeOut" }}
         >
-          <div className="visual-label visual-label-top">
-            <Orbit size={13} aria-hidden="true" /> DIGITAL UNIVERSE{" "}
-            <span>001</span>
-          </div>
           <div className="orbit orbit-one" aria-hidden="true" />
           <div className="orbit orbit-two" aria-hidden="true" />
           <div className="orbit orbit-three" aria-hidden="true" />
@@ -104,29 +92,7 @@ export default function Hero() {
           <div className="hero-portrait">
             <ProfilePhoto />
           </div>
-          <div className="visual-card" aria-hidden="true">
-            <div className="visual-card-icon">
-              <Code2 size={17} />
-            </div>
-            <div>
-              <span>STATUS / 01</span>
-              <strong>Curiosity → Creation</strong>
-            </div>
-            <span className="visual-card-dot" />
-          </div>
-          <div className="visual-label visual-label-bottom">
-            EXPLORING WHAT&apos;S POSSIBLE <span>↗</span>
-          </div>
         </motion.div>
-      </div>
-      <div className="hero-bottom" aria-hidden="true">
-        <span>
-          SCROLL TO EXPLORE <ArrowDown size={13} />
-        </span>
-        <span className="hero-bottom-center">
-          DESIGNING · BUILDING · LEARNING
-        </span>
-        <span>BASED IN {site.location.toUpperCase()}</span>
       </div>
     </section>
   );

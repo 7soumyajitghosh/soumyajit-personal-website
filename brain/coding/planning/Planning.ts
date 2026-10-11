@@ -30,8 +30,34 @@ export class HumanPlanner {
     const affectedComponents = (impact ? [...impact.directlyAffected, ...impact.potentiallyAffected] : relevant.map((f) => f.path)).slice(0, 12);
     const dependencies = [...new Set(relevant.flatMap((f) => f.imports.map((i) => i.to)))].slice(0, 12);
     const risks = this.risks(request, relevant);
-    void symbols;
-    const steps = this.stepsFor(request, relevant, affectedComponents);
+    const matchedSymbols = [...symbols.values()]
+      .map((n) => n.symbol.name)
+      .filter((name, idx, arr) =>
+        arr.indexOf(name) === idx &&
+        (lower.includes(name.toLowerCase()) || relevant.some((f) => f.symbols.some((s) => s.name === name))),
+      )
+      .slice(0, 6);
+    const steps = this.stepsFor(request, relevant, affectedComponents, matchedSymbols);
+
+    const verification: string[] = [
+      "typecheck passes",
+      "targeted tests pass",
+      "no unrelated files changed",
+      "manual repro of the reported behavior",
+    ];
+    if (/secur|auth|login|oauth|google|sso|session|jwt|token|secret|xss|inject/.test(lower)) {
+      verification.push("security scan passes");
+    }
+    if (/perf|optimiz|slow|latency|cache|bundle|render|n\+1/.test(lower)) {
+      verification.push("performance budget verified");
+    }
+    if (/api|route|endpoint|controller|schema|migration/.test(lower)) {
+      verification.push("API and schema contracts verified");
+    }
+    if (matchedSymbols.length > 0) {
+      verification.push(`callers of [${matchedSymbols.join(", ")}] verified`);
+    }
+
     return {
       request,
       investigation,
@@ -39,10 +65,7 @@ export class HumanPlanner {
       dependencies,
       risks,
       steps,
-      verification: [
-        "typecheck passes", "targeted tests pass", "no unrelated files changed",
-        void lower, "manual repro of the reported behavior",
-      ].filter((s) => typeof s === "string") as string[],
+      verification,
     };
   }
 
@@ -57,22 +80,26 @@ export class HumanPlanner {
   }
 
   private risks(request: string, relevant: ParsedFile[]): string[] {
-    void request;
-    const hay = relevant.map((f) => f.content).join("\n");
+    const hay = `${request}\n${relevant.map((f) => f.content).join("\n")}`;
     const out = ["regression in callers of touched symbols"];
-    if (/auth|session|token|password/i.test(hay)) out.push("auth/session breakage — verify login, logout, expiry paths");
+    if (/auth|session|token|password|login|oauth/i.test(hay)) out.push("auth/session breakage — verify login, logout, expiry paths");
     if (/prisma|migration|sql/i.test(hay)) out.push("schema change may require migration + seed updates");
     if (/await/i.test(hay)) out.push("async ordering / race conditions");
     return out;
   }
 
-  private stepsFor(request: string, relevant: ParsedFile[], affected: string[]): ImplementationPlan["steps"] {
+  private stepsFor(
+    request: string,
+    relevant: ParsedFile[],
+    affected: string[],
+    matchedSymbols: string[] = [],
+  ): ImplementationPlan["steps"] {
     const primary = relevant[0]?.path ?? affected[0] ?? "src/";
-    void request;
+    const symDetail = matchedSymbols.length ? ` Target symbols: ${matchedSymbols.join(", ")}.` : "";
     return [
-      { title: "Reproduce / confirm current behavior", detail: "Run existing tests + manual repro before editing.", files: [], smallestSafeChange: true },
-      { title: "Implement smallest safe change", detail: "Touch the narrowest surface that satisfies the request.", files: [primary], smallestSafeChange: true },
-      { title: "Wire dependents + update contracts", detail: "Update callers, API contracts, and types only as needed.", files: affected.slice(0, 4), smallestSafeChange: false },
+      { title: "Reproduce / confirm current behavior", detail: `Run existing tests + manual repro for "${request.slice(0, 80)}" before editing.${symDetail}`, files: [], smallestSafeChange: true },
+      { title: "Implement smallest safe change", detail: `Touch the narrowest surface in ${primary} that satisfies the request.${symDetail}`, files: [primary], smallestSafeChange: true },
+      { title: "Wire dependents + update contracts", detail: `Update callers, API contracts, and types only as needed.${symDetail}`, files: affected.slice(0, 4), smallestSafeChange: false },
       { title: "Add/adjust tests", detail: "Cover normal, edge, and failure paths for the changed behavior.", files: [], smallestSafeChange: false },
     ];
   }
@@ -87,38 +114,69 @@ export class ImpactAnalyzer {
     files: ParsedFile[],
     symbols: Map<string, SymbolNode>,
   ): ImpactReport {
-    // rebuild caller info if graph instance is fresh
-    void this.graph;
+    const graphSymbols = this.graph.build(files);
+    const effectiveSymbols = symbols.size > 0 ? symbols : graphSymbols;
     const direct = new Set<string>();
     const potential = new Set<string>();
     const reasoning: string[] = [];
 
     if (targetSymbol) {
       const id = `${targetFile}::${targetSymbol}`;
-      const node = symbols.get(id);
-      if (node) {
-        for (const caller of node.calledBy) {
+      const node = effectiveSymbols.get(id) ?? this.graph.get(id);
+      const graphCallers = this.graph.callers(id);
+      if (node || graphCallers.length) {
+        const directCallers = new Set<string>([
+          ...(node?.calledBy ?? []),
+          ...graphCallers.map((c) => c.id),
+        ]);
+        for (const caller of directCallers) {
           const f = caller.split("::")[0];
-          direct.add(f);
+          if (f) direct.add(f);
         }
-        reasoning.push(`${node.calledBy.length} direct caller(s) of ${targetSymbol}`);
-        // transitive
+        reasoning.push(`${directCallers.size} direct caller(s) of ${targetSymbol}`);
+        const trans = new Set<string>([
+          ...this.graph.transitiveDependents(id, 3),
+        ]);
         const seen = new Set([id]);
-        let frontier = [...node.calledBy];
+        let frontier = [...directCallers];
         for (let d = 0; d < 2 && frontier.length; d++) {
           const next: string[] = [];
           for (const c of frontier) {
             if (seen.has(c)) continue;
             seen.add(c);
-            const cn = symbols.get(c);
+            trans.add(c);
+            const cn = effectiveSymbols.get(c) ?? this.graph.get(c);
             if (!cn) continue;
             potential.add(cn.symbol.file);
             next.push(...cn.calledBy);
           }
           frontier = next;
         }
+        for (const t of trans) {
+          const tf = t.split("::")[0];
+          if (tf && tf !== targetFile) potential.add(tf);
+        }
       } else {
         reasoning.push(`symbol ${targetSymbol} not found — falling back to file-level analysis`);
+      }
+    } else {
+      const fileSyms = files.find((f) => f.path === targetFile)?.symbols ?? [];
+      let symbolCallerCount = 0;
+      for (const s of fileSyms) {
+        const id = `${targetFile}::${s.name}`;
+        for (const callerNode of this.graph.callers(id)) {
+          if (callerNode.symbol.file !== targetFile) {
+            direct.add(callerNode.symbol.file);
+            symbolCallerCount++;
+          }
+        }
+        for (const transId of this.graph.transitiveDependents(id, 2)) {
+          const tf = transId.split("::")[0];
+          if (tf && tf !== targetFile) potential.add(tf);
+        }
+      }
+      if (symbolCallerCount > 0) {
+        reasoning.push(`${symbolCallerCount} symbol caller(s) across graph for ${targetFile}`);
       }
     }
     // file-level: who imports the target

@@ -1,4 +1,4 @@
-import { ArrowUpRight, ExternalLink, Github } from "lucide-react";
+import { ExternalLink, Github } from "lucide-react";
 import type { Project } from "../data/projects";
 
 export default function ProjectCard({ project }: { project: Project }) {
@@ -12,9 +12,6 @@ export default function ProjectCard({ project }: { project: Project }) {
           <b />
         </div>
         <span className="project-category">{project.category}</span>
-        <span className="project-art-arrow">
-          <ArrowUpRight size={18} />
-        </span>
       </div>
       <div className="project-content">
         <div className="project-title-row">
@@ -30,37 +27,31 @@ export default function ProjectCard({ project }: { project: Project }) {
             <span key={tag}>{tag}</span>
           ))}
         </div>
-        <div className="project-links">
-          {project.githubUrl ? (
-            <a
-              className="project-link"
-              href={project.githubUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <Github size={14} aria-hidden="true" /> Code{" "}
-              <ExternalLink size={12} aria-hidden="true" />
-            </a>
-          ) : (
-            <span className="project-link project-link-muted">
-              GitHub URL placeholder
-            </span>
-          )}
-          {project.demoUrl ? (
-            <a
-              className="project-link"
-              href={project.demoUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Live demo <ExternalLink size={12} aria-hidden="true" />
-            </a>
-          ) : (
-            <span className="project-link project-link-muted">
-              Demo URL placeholder
-            </span>
-          )}
-        </div>
+        {(project.githubUrl || project.demoUrl) && (
+          <div className="project-links">
+            {project.githubUrl && (
+              <a
+                className="project-link"
+                href={project.githubUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Github size={14} aria-hidden="true" /> Code{" "}
+                <ExternalLink size={12} aria-hidden="true" />
+              </a>
+            )}
+            {project.demoUrl && (
+              <a
+                className="project-link"
+                href={project.demoUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Live demo <ExternalLink size={12} aria-hidden="true" />
+              </a>
+            )}
+          </div>
+        )}
       </div>
     </article>
   );

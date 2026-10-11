@@ -47,19 +47,18 @@ src/
     Navbar.tsx          # SG wordmark, section links, theme toggle, mobile menu
     Hero.tsx            # headline, CTAs, profile photo with fallback
     UniverseCanvas.tsx  # canvas stars, orbits, pointer parallax, reduced-motion
-    About.tsx           # bio + editable profile facts
+    About.tsx           # bio + profile facts
     Projects.tsx        # working category filters
     ProjectCard.tsx     # name, tags, status, GitHub + demo links
-    Journey.tsx         # editable timeline
-    Experiments.tsx     # 4 working interactive demos
-    Skills.tsx          # editable tech grid
+    Journey.tsx         # journey timeline
+    Skills.tsx          # tech grid
     Contact.tsx         # mailto + copy-email with feedback
     Footer.tsx          # dynamic year + back-to-top
   data/
     site.ts             # name, email, GitHub, profile image path
     projects.ts         # 4 projects, filters: All / AI / Web Development / Experiments
-    journey.ts          # editable milestones
-    skills.ts           # editable tools + profile facts
+    journey.ts          # journey milestones
+    skills.ts           # tools + profile facts
   hooks/
     useReducedMotion.ts # reactive prefers-reduced-motion hook
   App.tsx               # theme state + section composition
@@ -77,8 +76,8 @@ public/
 1. Add your portrait at `public/images/profile.jpg` (square, ≥800px, ≤~300KB). The hero shows a polished SG placeholder until that file exists. Path is configured in `src/data/site.ts` as `profileImage`.
 2. Set your real email in `src/data/site.ts` (`email`).
 3. Set your real GitHub URL in `src/data/site.ts` (`github`).
-4. Update `src/data/projects.ts` — only add `githubUrl` / `demoUrl` values you have verified. Empty strings render as clearly-labeled placeholders, never fake links.
-5. Update `src/data/journey.ts` and `src/data/skills.ts` — entries marked `editable` are placeholders. Replace them with real milestones.
+4. Update `src/data/projects.ts` — only add `githubUrl` / `demoUrl` values you have verified. Links render only when a URL is set, never fake links.
+5. Update `src/data/journey.ts` and `src/data/skills.ts` with real milestones and tools as you grow.
 6. Optional: add `public/images/og-cover.jpg` (1200×630) for link previews. `index.html` already references it.
 
 ## Vercel deployment
@@ -153,7 +152,6 @@ B. **Claim the subdomain with the is-a.dev project** (when PRs reopen).
 - Dark/light theme toggle (persisted to `localStorage`, respects `color-scheme`)
 - Project filters: All / AI / Web Development / Experiments (actually filters the grid)
 - Pointer-reactive universe canvas (pauses off-screen, honors reduced-motion)
-- Experiments Lab: particle sliders, keyboard+pointer glow, orbit speed/trails, gradient mixer with copy-CSS
 - Copy-email button with copied/failed feedback
 - External links use `target="_blank" rel="noreferrer"`
 - Back-to-top button with reduced-motion-aware smooth scroll

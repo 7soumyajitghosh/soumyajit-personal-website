@@ -23,10 +23,6 @@ export default function Contact() {
     <section className="contact-section" id="contact" aria-labelledby="contact-heading">
       <div className="section-wrap contact-inner">
         <span className="section-index">[ 06 / YOUR MOVE ]</span>
-        <div className="contact-orbit" aria-hidden="true">
-          <div />
-          <span>✳</span>
-        </div>
         <h2 id="contact-heading">
           Have an idea?
           <br />
@@ -75,9 +71,6 @@ export default function Contact() {
         <div className="contact-socials">
           <a href={site.github} target="_blank" rel="noreferrer" aria-label="GitHub profile">
             <Github size={16} aria-hidden="true" /> GitHub
-          </a>
-          <a href={`mailto:${site.email}`} aria-label="Email Soumyajit">
-            <Mail size={16} aria-hidden="true" /> Email
           </a>
         </div>
         {/*

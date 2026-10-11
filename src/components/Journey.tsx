@@ -38,24 +38,12 @@ export default function Journey() {
               <span className="timeline-date">{item.date}</span>
               <span className="timeline-node" aria-hidden="true" />
               <div className="timeline-copy">
-                <h3>
-                  {item.title}{" "}
-                  {item.editable && (
-                    <span className="editable-badge">Editable</span>
-                  )}
-                </h3>
+                <h3>{item.title}</h3>
                 <p>{item.description}</p>
               </div>
-              <span className="timeline-index" aria-hidden="true">
-                0{index + 1}
-              </span>
             </motion.li>
           ))}
         </ol>
-        <p className="timeline-note">
-          Edit milestones in <code>src/data/journey.ts</code>. Dates marked
-          “Editable” are placeholders — replace them with real milestones.
-        </p>
       </div>
     </section>
   );

@@ -63,8 +63,8 @@ export default function About() {
           </a>
         </div>
 
-        <div className="about-panel" aria-label="Editable profile facts">
-          <h3 className="about-panel-title">Profile facts · editable</h3>
+        <div className="about-panel" aria-label="Profile facts">
+          <h3 className="about-panel-title">Profile facts</h3>
           <dl className="about-panel-list">
             <div>
               <dt>Focus</dt>
@@ -83,10 +83,6 @@ export default function About() {
               <dd>Ideas, feedback &amp; collaboration</dd>
             </div>
           </dl>
-          <p className="about-panel-note">
-            Edit these in <code>src/data/skills.ts</code>. No degrees, jobs,
-            or awards are claimed here.
-          </p>
         </div>
       </div>
     </section>

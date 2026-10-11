@@ -15,9 +15,53 @@ function calleesOf(symbols: Map<string, SymbolNode>, id: string): string[] {
   return symbols.get(id)?.calls ?? [];
 }
 
+function matchesImportPath(specifier: string, targetPath: string): boolean {
+  if (!specifier || !targetPath) return false;
+  const normSpec = specifier.replace(/\\/g, "/").replace(/\.[^./]+$/, "");
+  const normTarget = targetPath.replace(/\\/g, "/").replace(/\.[^./]+$/, "");
+  if (normSpec === normTarget) return true;
+  const strippedSpec = normSpec.replace(/^(\.\.?\/)+/, "");
+  if (strippedSpec && (normTarget === strippedSpec || normTarget.endsWith(`/${strippedSpec}`))) return true;
+  const specStem = normSpec.split("/").pop() ?? "";
+  const targetStem = normTarget.split("/").pop() ?? "";
+  return Boolean(specStem && targetStem && specStem === targetStem && (specifier.startsWith(".") || specifier.includes("/")));
+}
+
 // ---- §3 ----
 export class HumanCodeReader {
-  read(symbol: ParsedSymbol, file: ParsedFile, symbols: Map<string, SymbolNode>): CodeUnderstanding {
+  read(symbol: ParsedSymbol, file: ParsedFile, symbols: Map<string, SymbolNode>, files?: ParsedFile[]): CodeUnderstanding;
+  read(files: ParsedFile[], symbols?: Map<string, SymbolNode>): CodeUnderstanding[];
+  read(
+    symbolOrFiles: ParsedSymbol | ParsedFile[],
+    fileOrSymbols?: ParsedFile | Map<string, SymbolNode>,
+    symbols?: Map<string, SymbolNode>,
+    files?: ParsedFile[],
+  ): CodeUnderstanding | CodeUnderstanding[] {
+    if (Array.isArray(symbolOrFiles)) {
+      const allFiles = symbolOrFiles;
+      const symMap = fileOrSymbols instanceof Map ? fileOrSymbols : new Map<string, SymbolNode>();
+      const results: CodeUnderstanding[] = [];
+      for (const f of allFiles) {
+        for (const s of f.symbols) {
+          results.push(this.readSymbol(s, f, symMap, allFiles));
+        }
+      }
+      return results;
+    }
+    return this.readSymbol(
+      symbolOrFiles,
+      fileOrSymbols as ParsedFile,
+      symbols ?? new Map<string, SymbolNode>(),
+      files,
+    );
+  }
+
+  private readSymbol(
+    symbol: ParsedSymbol,
+    file: ParsedFile,
+    symbols: Map<string, SymbolNode>,
+    files?: ParsedFile[],
+  ): CodeUnderstanding {
     const id = `${file.path}::${symbol.name}`;
     const node = symbols.get(id);
     const body = sliceOf(file, symbol.line);
@@ -27,7 +71,7 @@ export class HumanCodeReader {
     ].filter((v, i, a) => v && a.indexOf(v) === i).slice(0, 15);
     const dependents = [...new Set([
       ...callersOf(symbols, id).map((c) => c.split("::").pop() ?? c),
-      ...this.fileDependents(file, symbols),
+      ...this.fileDependents(file, symbols, files),
     ])].slice(0, 15);
 
     const assumptions = this.assumptions(symbol, body);
@@ -51,10 +95,59 @@ export class HumanCodeReader {
     };
   }
 
-  private fileDependents(file: ParsedFile, symbols: Map<string, SymbolNode>): string[] {
-    void symbols;
-    void file;
-    return [];
+  fileDependents(file: ParsedFile, symbols: Map<string, SymbolNode>, files?: ParsedFile[]): string[] {
+    const definedNames = new Set<string>([
+      ...file.symbols.map((s) => s.name),
+      ...file.exports,
+    ]);
+    const definedIds = new Set<string>(file.symbols.map((s) => `${file.path}::${s.name}`));
+    const dependents = new Set<string>();
+
+    for (const node of symbols.values()) {
+      const nodeFile = node.symbol?.file ?? node.id.split("::")[0];
+      if (!nodeFile || nodeFile === file.path) continue;
+      for (const call of node.calls) {
+        const shortName = call.split("::").pop() ?? call;
+        if (definedIds.has(call) || definedNames.has(shortName) || definedNames.has(call)) {
+          dependents.add(nodeFile);
+          break;
+        }
+      }
+      if (!dependents.has(nodeFile)) {
+        for (const dep of node.dataDeps) {
+          if (matchesImportPath(dep, file.path)) {
+            dependents.add(nodeFile);
+            break;
+          }
+        }
+      }
+    }
+
+    for (const sym of file.symbols) {
+      const node = symbols.get(`${file.path}::${sym.name}`);
+      if (!node) continue;
+      for (const callerId of node.calledBy) {
+        const callerFile = callerId.split("::")[0];
+        if (callerFile && callerFile !== file.path) dependents.add(callerFile);
+      }
+    }
+
+    if (files) {
+      for (const other of files) {
+        if (other.path === file.path) continue;
+        for (const imp of other.imports) {
+          if (
+            matchesImportPath(imp.to, file.path) ||
+            imp.names.some((n) => definedNames.has(n))
+          ) {
+            dependents.add(other.path);
+            break;
+          }
+        }
+      }
+    }
+
+    return [...dependents];
   }
 
   private purpose(symbol: ParsedSymbol, body: string): string {

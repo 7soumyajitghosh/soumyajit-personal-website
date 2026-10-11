@@ -65,24 +65,6 @@ export default function Projects() {
             </motion.div>
           ))}
         </div>
-
-        {visible.length === 0 && (
-          <p className="projects-empty" role="status">
-            No projects in this category yet — check back soon.
-          </p>
-        )}
-
-        <div className="projects-note">
-          <span className="note-mark" aria-hidden="true">
-            ✳
-          </span>
-          <p>
-            Every project starts with a question.
-            <br />
-            <span>The best ones turn into something real.</span>
-          </p>
-          <span className="note-counter">MORE TO COME ↗</span>
-        </div>
       </div>
     </section>
   );
