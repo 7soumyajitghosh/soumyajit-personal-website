@@ -107,12 +107,13 @@ Target custom domain: `soumyajit.is-a.dev` (free `is-a.dev` subdomain).
 8. Custom 404 is served from `public/404.html` (copied to `dist/404.html` on build).
 9. `vite.config.ts` explicitly sets `base: "/"` and `build.outDir: "dist"` so asset
    URLs are correct when served from the site root on the custom domain.
-10. No npm lockfile is committed — Pages runs `npm install` automatically with
-    build command `npm run build`, which works without one. If you want
-    reproducible installs, run `npm install --package-lock-only`, commit the
-    generated `package-lock.json`, and redeploy. `pnpm-workspace.yaml` exists
-    only to allow the `esbuild` postinstall under a local pnpm wrapper; it is
-    ignored by Pages/npm builds.
+10. `pnpm-lock.yaml` is committed for local reproducible installs, but Pages
+    uses `npm run build` and runs `npm install`, which ignores pnpm files. If
+    you want locked npm installs on Pages, run
+    `npm install --package-lock-only`, commit the generated
+    `package-lock.json`, and redeploy. `pnpm-workspace.yaml` exists only to
+    allow the `esbuild` postinstall under a local pnpm wrapper; it is ignored
+    by Pages/npm builds.
 
 ### Custom domain: `soumyajit.is-a.dev`
 
