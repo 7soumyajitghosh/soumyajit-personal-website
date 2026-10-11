@@ -14,9 +14,13 @@ const LINKS = [
 export default function Navbar({
   theme,
   onToggleTheme,
+  accent,
+  onAccentChange,
 }: {
   theme: "dark" | "light";
   onToggleTheme: () => void;
+  accent: string;
+  onAccentChange: (accent: string) => void;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -80,6 +84,33 @@ export default function Navbar({
       </nav>
 
       <div className="topbar-actions">
+        <div
+          className="accent-picker"
+          role="group"
+          aria-label="Choose accent color"
+          title="Choose accent color"
+        >
+          {(
+            [
+              { id: "blue", label: "Blue (original)" },
+              { id: "orange", label: "Orange (recommended)" },
+              { id: "emerald", label: "Emerald green" },
+              { id: "pink", label: "Pink" },
+              { id: "mono", label: "Mono blue" },
+            ] as const
+          ).map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className={`accent-swatch ${accent === s.id ? "active" : ""}`}
+              data-swatch={s.id}
+              aria-label={s.label}
+              title={s.label}
+              aria-pressed={accent === s.id}
+              onClick={() => onAccentChange(s.id)}
+            />
+          ))}
+        </div>
         <button
           className="icon-button"
           type="button"

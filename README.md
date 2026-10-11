@@ -88,7 +88,7 @@ No `wrangler.toml` is used — Pages Git integration builds and serves `dist/` d
 No `_redirects` SPA rewrite is included — this is a single page using hash anchors
 (no client-side router), so it is not needed. The custom 404 stays as `public/404.html`.
 
-Target custom domain: `soumyajit.is-a.dev` (free `is-a.dev` subdomain).
+Target custom domain: `7soumyajit.is-a.dev` (free `is-a.dev` subdomain).
 
 1. Push this repo to GitHub (production branch `main`).
 2. Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git.
@@ -115,18 +115,18 @@ Target custom domain: `soumyajit.is-a.dev` (free `is-a.dev` subdomain).
     allow the `esbuild` postinstall under a local pnpm wrapper; it is ignored
     by Pages/npm builds.
 
-### Custom domain: `soumyajit.is-a.dev`
+### Custom domain: `7soumyajit.is-a.dev`
 
 Two separate steps, both manual (nothing in this repo does them for you):
 
 A. **Claim the subdomain with the is-a.dev project.** `is-a.dev` subdomains are
    granted through that project's own documented registration process (see the
    official is-a.dev docs/repo for the current steps and required record
-   format). Follow their process to request `soumyajit`. This repo contains no
+   format). Follow their process to request `7soumyajit`. This repo contains no
    registration file and makes no claim that the name is registered or reserved.
 
 B. **Connect it in Cloudflare Pages.** Pages project → Custom domains → Set up a
-   custom domain → enter `soumyajit.is-a.dev`, then follow exactly the DNS /
+   custom domain → enter `7soumyajit.is-a.dev`, then follow exactly the DNS /
    verification instructions the Pages dashboard shows you. Do not copy DNS
    values from anywhere else — use only what the dashboard displays for your
    project. HTTPS is provisioned by Cloudflare once verification passes.
@@ -135,8 +135,8 @@ B. **Connect it in Cloudflare Pages.** Pages project → Custom domains → Set 
 
 - [ ] Push to GitHub and connect the repo to Cloudflare Pages (steps 1–7 above).
 - [ ] Set `NODE_VERSION` in Pages settings; confirm the first deploy succeeds.
-- [ ] Request `soumyajit` via the is-a.dev project's documented process.
-- [ ] Add `soumyajit.is-a.dev` as a Pages custom domain; complete the DNS /
+- [ ] Request `7soumyajit` via the is-a.dev project's documented process.
+- [ ] Add `7soumyajit.is-a.dev` as a Pages custom domain; complete the DNS /
       verification steps the dashboard shows; confirm HTTPS loads.
 - [ ] Add `public/images/profile.jpg` and `public/images/og-cover.jpg` (see
       "Personalize before publishing") — both 404 until you add them.

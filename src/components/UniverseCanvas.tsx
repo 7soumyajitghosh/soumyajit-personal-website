@@ -34,13 +34,70 @@ export default function UniverseCanvas() {
     let raf = 0;
     let running = true;
 
-    const TINTS = [
+    const readVar = (name: string, fallback: string) => {
+      const shell = document.querySelector(".site-shell");
+      const v = shell
+        ? getComputedStyle(shell).getPropertyValue(name).trim()
+        : "";
+      return v || fallback;
+    };
+
+    // Accent-aware colors — refreshed whenever data-accent / theme changes.
+    let TINTS = [
       "rgba(226,232,255,0.65)",
       "rgba(226,232,255,0.45)",
       "rgba(139,146,255,0.7)",
       "rgba(103,209,255,0.75)",
       "rgba(167,139,250,0.65)",
     ];
+    let glowStops = ["rgba(99,102,241,0.13)", "rgba(59,130,246,0.06)", "rgba(34,211,238,0.03)"];
+    let pointerGlow = "103,209,255";
+    const hexToRgb = (hex: string) => {
+      const h = hex.replace("#", "");
+      if (h.length === 3)
+        return h.split("").map((c) => parseInt(c + c, 16));
+      if (h.length === 6)
+        return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
+      return null;
+    };
+    const withAlpha = (color: string, alpha: number) => {
+      const rgb = hexToRgb(color);
+      if (rgb) return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha})`;
+      const m = color.match(/(\d+),\s*(\d+),\s*(\d+)/);
+      if (m) return `rgba(${m[1]},${m[2]},${m[3]},${alpha})`;
+      return color;
+    };
+    const refreshColors = () => {
+      const cyan = readVar("--cyan", "#67d1ff");
+      const violet = readVar("--violet", "#a78bfa");
+      const blue = readVar("--blue", "#4f7cff");
+      TINTS = [
+        "rgba(226,232,255,0.65)",
+        "rgba(226,232,255,0.45)",
+        withAlpha(blue, 0.7),
+        withAlpha(cyan, 0.75),
+        withAlpha(violet, 0.65),
+      ];
+      for (let i = 0; i < stars.length; i++) {
+        stars[i].tint = TINTS[i % TINTS.length];
+      }
+      glowStops = [withAlpha(blue, 0.13), withAlpha(blue, 0.06), withAlpha(cyan, 0.03)];
+      const rgb = hexToRgb(cyan);
+      pointerGlow = rgb ? `${rgb[0]},${rgb[1]},${rgb[2]}` : "103,209,255";
+    };
+    refreshColors();
+
+    const shellEl = document.querySelector(".site-shell");
+    const accentObserver = shellEl
+      ? new MutationObserver(() => {
+          refreshColors();
+          drawStatic();
+        })
+      : null;
+    accentObserver?.observe(shellEl as Node, {
+      attributes: true,
+      attributeFilter: ["data-accent", "class"],
+    });
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
@@ -82,17 +139,17 @@ export default function UniverseCanvas() {
         width * 0.7, height * 0.35, 0,
         width * 0.7, height * 0.35, Math.max(width, height) * 0.7,
       );
-      g.addColorStop(0, "rgba(99,102,241,0.13)");
-      g.addColorStop(0.45, "rgba(59,130,246,0.06)");
-      g.addColorStop(0.7, "rgba(34,211,238,0.03)");
+      g.addColorStop(0, glowStops[0]);
+      g.addColorStop(0.45, glowStops[1]);
+      g.addColorStop(0.7, glowStops[2]);
       g.addColorStop(1, "rgba(5,7,15,0)");
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, width, height);
 
       if (px > -500 && !reducedRef.current) {
         const pg = ctx.createRadialGradient(px, py, 0, px, py, 160);
-        pg.addColorStop(0, "rgba(103,209,255,0.07)");
-        pg.addColorStop(1, "rgba(103,209,255,0)");
+        pg.addColorStop(0, `rgba(${pointerGlow},0.07)`);
+        pg.addColorStop(1, `rgba(${pointerGlow},0)`);
         ctx.fillStyle = pg;
         ctx.fillRect(0, 0, width, height);
       }
@@ -159,7 +216,7 @@ export default function UniverseCanvas() {
             ctx.beginPath();
             ctx.moveTo(s.x, s.y);
             ctx.lineTo(pointer.x, pointer.y);
-            ctx.strokeStyle = `rgba(103,209,255,${((1 - d / 130) * 0.16).toFixed(3)})`;
+            ctx.strokeStyle = `rgba(${pointerGlow},${((1 - d / 130) * 0.16).toFixed(3)})`;
             ctx.lineWidth = 0.7;
             ctx.stroke();
           }
@@ -237,6 +294,7 @@ export default function UniverseCanvas() {
       running = false;
       window.cancelAnimationFrame(raf);
       observer.disconnect();
+      accentObserver?.disconnect();
       canvas.removeEventListener("pointermove", onPointerMove);
       canvas.removeEventListener("pointerleave", onPointerLeave);
       window.removeEventListener("resize", resize);

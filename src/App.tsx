@@ -15,6 +15,17 @@ function App() {
     const saved = window.localStorage.getItem("sg-theme");
     return saved === "light" ? "light" : "dark";
   });
+  const [accent, setAccent] = useState<string>(() => {
+    if (typeof window === "undefined") return "orange";
+    const saved = window.localStorage.getItem("sg-accent");
+    return saved === "blue" ||
+      saved === "orange" ||
+      saved === "emerald" ||
+      saved === "pink" ||
+      saved === "mono"
+      ? saved
+      : "orange";
+  });
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -22,14 +33,23 @@ function App() {
     window.localStorage.setItem("sg-theme", theme);
   }, [theme ]);
 
+  useEffect(() => {
+    window.localStorage.setItem("sg-accent", accent);
+  }, [accent ]);
+
   return (
-    <div className={`site-shell ${theme === "light" ? "light-theme" : ""}`}>
+    <div
+      className={`site-shell ${theme === "light" ? "light-theme" : ""}`}
+      data-accent={accent}
+    >
       <a className="skip-link" href="#main">
         Skip to content
       </a>
       <Navbar
         theme={theme}
         onToggleTheme={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+        accent={accent}
+        onAccentChange={setAccent}
       />
       <main id="main">
         <Hero />

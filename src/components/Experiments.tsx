@@ -38,17 +38,36 @@ function ParticleDemo() {
     window.addEventListener("resize", resize);
 
     let t = 0;
+    const readAccent = () => {
+      const shell = document.querySelector(".site-shell");
+      const cyan = shell
+        ? getComputedStyle(shell).getPropertyValue("--cyan").trim()
+        : "";
+      return cyan || "#67d1ff";
+    };
+    const hexToRgba = (hex: string, alpha: number) => {
+      const h = hex.replace("#", "");
+      const full =
+        h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+      if (full.length !== 6) return `rgba(103,209,255,${alpha})`;
+      const r = parseInt(full.slice(0, 2), 16);
+      const g = parseInt(full.slice(2, 4), 16);
+      const b = parseInt(full.slice(4, 6), 16);
+      return `rgba(${r},${g},${b},${alpha})`;
+    };
     const draw = () => {
       t += 0.016 * settings.current.speed;
       ctx.clearRect(0, 0, w, h);
       const n = settings.current.count;
+      const accent = readAccent();
+      const accentFill = hexToRgba(accent, 0.85);
       for (let i = 0; i < n; i++) {
         const p = pts[i];
         const y = ((p.y - t * 0.03 * p.v) % 1 + 1) % 1;
         const x = (p.x + Math.sin(t + i) * 0.008 + 1) % 1;
         ctx.beginPath();
         ctx.arc(x * w, y * h, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = i % 4 === 0 ? "rgba(103,209,255,0.85)" : "rgba(196,205,235,0.55)";
+        ctx.fillStyle = i % 4 === 0 ? accentFill : "rgba(196,205,235,0.55)";
         ctx.fill();
       }
       if (!reduced) raf = requestAnimationFrame(draw);
@@ -156,9 +175,9 @@ function OrbitDemo() {
   }, [reduced, speed]);
 
   const bodies = [
-    { r: 34, size: 10, color: "#67d1ff", offset: 0 },
-    { r: 56, size: 7, color: "#a78bfa", offset: 0.35 },
-    { r: 78, size: 5, color: "#7ef29a", offset: 0.65 },
+    { r: 34, size: 10, color: "var(--cyan)", offset: 0 },
+    { r: 56, size: 7, color: "var(--violet)", offset: 0.35 },
+    { r: 78, size: 5, color: "var(--accent)", offset: 0.65 },
   ];
 
   return (
